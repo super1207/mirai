@@ -42,4 +42,7 @@ local.properties
 # Maven publishing credits
 keys.properties
 /plugins/
-/mirai-core-qqandroid/src/jvmTest/kotlin/
+
+token.txt
+bintray.user.txt
+bintray.key.txt

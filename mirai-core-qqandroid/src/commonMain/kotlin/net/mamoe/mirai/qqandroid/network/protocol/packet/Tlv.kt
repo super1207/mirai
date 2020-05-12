@@ -7,6 +7,8 @@
  * https://github.com/mamoe/mirai/blob/master/LICENSE
  */
 
+@file:Suppress("NOTHING_TO_INLINE")
+
 package net.mamoe.mirai.qqandroid.network.protocol.packet
 
 import kotlinx.io.core.BytePacketBuilder
@@ -14,18 +16,19 @@ import kotlinx.io.core.ByteReadPacket
 import kotlinx.io.core.toByteArray
 import kotlinx.io.core.writeFully
 import net.mamoe.mirai.qqandroid.network.protocol.LoginType
+import net.mamoe.mirai.qqandroid.utils.MiraiPlatformUtils
 import net.mamoe.mirai.qqandroid.utils.NetworkType
+import net.mamoe.mirai.qqandroid.utils.io.*
+import net.mamoe.mirai.qqandroid.utils.toByteArray
 import net.mamoe.mirai.utils.currentTimeMillis
-import net.mamoe.mirai.utils.io.*
-import net.mamoe.mirai.utils.md5
 import kotlin.random.Random
 
 /**
  * 显式表示一个 [ByteArray] 是一个 tlv 的 body
  */
-inline class Tlv(val value: ByteArray)
+internal inline class Tlv(val value: ByteArray)
 
-fun BytePacketBuilder.t1(uin: Long, ip: ByteArray) {
+internal fun BytePacketBuilder.t1(uin: Long, ip: ByteArray) {
     require(ip.size == 4) { "ip.size must == 4" }
     writeShort(0x1)
     writeShortLVPacket {
@@ -38,7 +41,7 @@ fun BytePacketBuilder.t1(uin: Long, ip: ByteArray) {
     } shouldEqualsTo 20
 }
 
-fun BytePacketBuilder.t2(captchaCode: String, captchaToken: ByteArray, sigVer: Short = 0) {
+internal fun BytePacketBuilder.t2(captchaCode: String, captchaToken: ByteArray, sigVer: Short = 0) {
     writeShort(0x2)
     writeShortLVPacket {
         writeShort(sigVer)
@@ -47,7 +50,7 @@ fun BytePacketBuilder.t2(captchaCode: String, captchaToken: ByteArray, sigVer: S
     }
 }
 
-fun BytePacketBuilder.t8(
+internal fun BytePacketBuilder.t8(
     localId: Int = 2052
 ) {
     writeShort(0x8)
@@ -58,7 +61,7 @@ fun BytePacketBuilder.t8(
     }
 }
 
-fun BytePacketBuilder.t18(
+internal fun BytePacketBuilder.t18(
     appId: Long,
     appClientVersion: Int = 0,
     uin: Long,
@@ -76,9 +79,10 @@ fun BytePacketBuilder.t18(
     } shouldEqualsTo 22
 }
 
-fun BytePacketBuilder.t106(
+
+internal fun BytePacketBuilder.t106(
     appId: Long = 16L,
-    subAppId: Long = 537062845L,
+    subAppId: Long,
     appClientVersion: Int = 0,
     uin: Long,
     n5_always_1: Int = 1,
@@ -96,7 +100,7 @@ fun BytePacketBuilder.t106(
     guid?.requireSize(16)
 
     writeShortLVPacket {
-        encryptAndWrite(md5(passwordMd5 + ByteArray(4) + (salt.takeIf { it != 0L } ?: uin).toInt().toByteArray())) {
+        encryptAndWrite(MiraiPlatformUtils.md5(passwordMd5 + ByteArray(4) + (salt.takeIf { it != 0L } ?: uin).toInt().toByteArray())) {
             writeShort(4)//TGTGTVer
             writeInt(Random.nextInt())
             writeInt(5)//ssoVer
@@ -134,7 +138,7 @@ fun BytePacketBuilder.t106(
     }
 }
 
-fun BytePacketBuilder.t116(
+internal fun BytePacketBuilder.t116(
     miscBitmap: Int,
     subSigMap: Int,
     appIdList: LongArray = longArrayOf(1600000226L)
@@ -152,9 +156,9 @@ fun BytePacketBuilder.t116(
 }
 
 
-fun BytePacketBuilder.t100(
+internal fun BytePacketBuilder.t100(
     appId: Long = 16,
-    subAppId: Long = 537062845,
+    subAppId: Long,
     appClientVersion: Int
 ) {
     writeShort(0x100)
@@ -168,7 +172,7 @@ fun BytePacketBuilder.t100(
     } shouldEqualsTo 22
 }
 
-fun BytePacketBuilder.t107(
+internal fun BytePacketBuilder.t107(
     picType: Int,
     const1_always_0: Int = 0,
     const2_always_0: Int = 0,
@@ -183,7 +187,7 @@ fun BytePacketBuilder.t107(
     } shouldEqualsTo 6
 }
 
-fun BytePacketBuilder.t108(
+internal fun BytePacketBuilder.t108(
     ksid: ByteArray
 ) {
     require(ksid.size == 16) { "ksid should length 16" }
@@ -193,7 +197,7 @@ fun BytePacketBuilder.t108(
     }
 }
 
-fun BytePacketBuilder.t104(
+internal fun BytePacketBuilder.t104(
     t104Data: ByteArray
 ) {
     writeShort(0x104)
@@ -202,7 +206,7 @@ fun BytePacketBuilder.t104(
     }
 }
 
-fun BytePacketBuilder.t174(
+internal fun BytePacketBuilder.t174(
     t174Data: ByteArray
 ) {
     writeShort(0x174)
@@ -212,7 +216,7 @@ fun BytePacketBuilder.t174(
 }
 
 
-fun BytePacketBuilder.t17a(
+internal fun BytePacketBuilder.t17a(
     value: Int = 0
 ) {
     writeShort(0x17a)
@@ -221,7 +225,7 @@ fun BytePacketBuilder.t17a(
     }
 }
 
-fun BytePacketBuilder.t197(
+internal fun BytePacketBuilder.t197(
     value: ByteArray
 ) {
     writeShort(0x197)
@@ -230,7 +234,7 @@ fun BytePacketBuilder.t197(
     }
 }
 
-fun BytePacketBuilder.t19e(
+internal fun BytePacketBuilder.t19e(
     value: Int = 0
 ) {
     writeShort(0x19e)
@@ -240,7 +244,7 @@ fun BytePacketBuilder.t19e(
     }
 }
 
-fun BytePacketBuilder.t17c(
+internal fun BytePacketBuilder.t17c(
     t17cData: ByteArray
 ) {
     writeShort(0x17c)
@@ -250,7 +254,7 @@ fun BytePacketBuilder.t17c(
     }
 }
 
-fun BytePacketBuilder.t401(
+internal fun BytePacketBuilder.t401(
     t401Data: ByteArray
 ) {
     writeShort(0x401)
@@ -262,7 +266,7 @@ fun BytePacketBuilder.t401(
 /**
  * @param apkId application.getPackageName().getBytes()
  */
-fun BytePacketBuilder.t142(
+internal fun BytePacketBuilder.t142(
     apkId: ByteArray
 ) {
     writeShort(0x142)
@@ -272,7 +276,7 @@ fun BytePacketBuilder.t142(
     }
 }
 
-fun BytePacketBuilder.t112(
+internal fun BytePacketBuilder.t112(
     nonNumberUin: ByteArray
 ) {
     writeShort(0x112)
@@ -281,7 +285,7 @@ fun BytePacketBuilder.t112(
     }
 }
 
-fun BytePacketBuilder.t144(
+internal fun BytePacketBuilder.t144(
     // t109
     androidId: ByteArray,
 
@@ -321,16 +325,17 @@ fun BytePacketBuilder.t144(
     }
 }
 
-fun BytePacketBuilder.t109(
+
+internal fun BytePacketBuilder.t109(
     androidId: ByteArray
 ) {
     writeShort(0x109)
     writeShortLVPacket {
-        writeFully(md5(androidId))
+        writeFully(MiraiPlatformUtils.md5(androidId))
     } shouldEqualsTo 16
 }
 
-fun BytePacketBuilder.t52d(
+internal fun BytePacketBuilder.t52d(
     androidDevInfo: ByteArray // oicq.wlogin_sdk.tools.util#get_android_dev_info
 ) {
     writeShort(0x52d)
@@ -342,7 +347,7 @@ fun BytePacketBuilder.t52d(
     }
 }
 
-fun BytePacketBuilder.t124(
+internal fun BytePacketBuilder.t124(
     osType: ByteArray = "android".toByteArray(),
     osVersion: ByteArray, // Build.VERSION.RELEASE.toByteArray()
     networkType: NetworkType,  //oicq.wlogin_sdk.tools.util#get_network_type
@@ -361,7 +366,7 @@ fun BytePacketBuilder.t124(
     }
 }
 
-fun BytePacketBuilder.t128(
+internal fun BytePacketBuilder.t128(
     isGuidFromFileNull: Boolean = false, // 保存到文件的 GUID 是否为 null
     isGuidAvailable: Boolean = true, // GUID 是否可用(计算/读取成功)
     isGuidChanged: Boolean = false, // GUID 是否有变动
@@ -415,7 +420,7 @@ fun BytePacketBuilder.t128(
     }
 }
 
-fun BytePacketBuilder.t16e(
+internal fun BytePacketBuilder.t16e(
     buildModel: ByteArray
 ) {
     writeShort(0x16e)
@@ -424,7 +429,7 @@ fun BytePacketBuilder.t16e(
     }
 }
 
-fun BytePacketBuilder.t145(
+internal fun BytePacketBuilder.t145(
     guid: ByteArray
 ) {
     writeShort(0x145)
@@ -433,7 +438,7 @@ fun BytePacketBuilder.t145(
     }
 }
 
-fun BytePacketBuilder.t147(
+internal fun BytePacketBuilder.t147(
     appId: Long,
     apkVersionName: ByteArray,
     apkSignatureMd5: ByteArray
@@ -446,7 +451,7 @@ fun BytePacketBuilder.t147(
     }
 }
 
-fun BytePacketBuilder.t166(
+internal fun BytePacketBuilder.t166(
     imageType: Int
 ) {
     writeShort(0x166)
@@ -455,7 +460,7 @@ fun BytePacketBuilder.t166(
     }
 }
 
-fun BytePacketBuilder.t16a(
+internal fun BytePacketBuilder.t16a(
     noPicSig: ByteArray // unknown source
 ) {
     writeShort(0x16a)
@@ -464,7 +469,7 @@ fun BytePacketBuilder.t16a(
     }
 }
 
-fun BytePacketBuilder.t154(
+internal fun BytePacketBuilder.t154(
     ssoSequenceId: Int // starts from 0
 ) {
     writeShort(0x154)
@@ -473,7 +478,7 @@ fun BytePacketBuilder.t154(
     }
 }
 
-fun BytePacketBuilder.t141(
+internal fun BytePacketBuilder.t141(
     simInfo: ByteArray,
     networkType: NetworkType,
     apn: ByteArray
@@ -487,7 +492,7 @@ fun BytePacketBuilder.t141(
     }
 }
 
-fun BytePacketBuilder.t511(
+internal fun BytePacketBuilder.t511(
     domains: List<String>
 ) {
     writeShort(0x511)
@@ -514,7 +519,7 @@ fun BytePacketBuilder.t511(
     }
 }
 
-fun BytePacketBuilder.t172(
+internal fun BytePacketBuilder.t172(
     rollbackSig: ByteArray // 由服务器发来的 tlv_t172 获得
 ) {
     writeShort(0x172)
@@ -523,7 +528,7 @@ fun BytePacketBuilder.t172(
     }
 }
 
-fun BytePacketBuilder.t185() {
+internal fun BytePacketBuilder.t185() {
     writeShort(0x185)
     writeShortLVPacket {
         writeByte(1)
@@ -531,7 +536,7 @@ fun BytePacketBuilder.t185() {
     }
 }
 
-fun BytePacketBuilder.t400(
+internal fun BytePacketBuilder.t400(
     g: ByteArray, // 用于加密这个 tlv
     uin: Long,
     guid: ByteArray,
@@ -556,25 +561,27 @@ fun BytePacketBuilder.t400(
     }
 }
 
-fun BytePacketBuilder.t187(
+
+internal fun BytePacketBuilder.t187(
     macAddress: ByteArray
 ) {
     writeShort(0x187)
     writeShortLVPacket {
-        writeFully(md5(macAddress)) // may be md5
+        writeFully(MiraiPlatformUtils.md5(macAddress)) // may be md5
     }
 }
 
-fun BytePacketBuilder.t188(
+
+internal fun BytePacketBuilder.t188(
     androidId: ByteArray
 ) {
     writeShort(0x188)
     writeShortLVPacket {
-        writeFully(md5(androidId))
+        writeFully(MiraiPlatformUtils.md5(androidId))
     } shouldEqualsTo 16
 }
 
-fun BytePacketBuilder.t193(
+internal fun BytePacketBuilder.t193(
     ticket: String
 ) {
     writeShort(0x193)
@@ -583,7 +590,7 @@ fun BytePacketBuilder.t193(
     }
 }
 
-fun BytePacketBuilder.t194(
+internal fun BytePacketBuilder.t194(
     imsiMd5: ByteArray
 ) {
     imsiMd5 requireSize 16
@@ -594,7 +601,7 @@ fun BytePacketBuilder.t194(
     } shouldEqualsTo 16
 }
 
-fun BytePacketBuilder.t191(
+internal fun BytePacketBuilder.t191(
     K: Int = 0x82
 ) {
     writeShort(0x191)
@@ -603,7 +610,7 @@ fun BytePacketBuilder.t191(
     }
 }
 
-fun BytePacketBuilder.t201(
+internal fun BytePacketBuilder.t201(
     L: ByteArray = byteArrayOf(), // unknown
     channelId: ByteArray = byteArrayOf(),
     clientType: ByteArray = "qq".toByteArray(),
@@ -618,7 +625,7 @@ fun BytePacketBuilder.t201(
     }
 }
 
-fun BytePacketBuilder.t202(
+internal fun BytePacketBuilder.t202(
     wifiBSSID: ByteArray,
     wifiSSID: ByteArray
 ) {
@@ -629,7 +636,7 @@ fun BytePacketBuilder.t202(
     }
 }
 
-fun BytePacketBuilder.t177(
+internal fun BytePacketBuilder.t177(
     unknown1: Long = 1571193922L,
     unknown2: String = "6.0.0.2413"
 ) {
@@ -641,7 +648,7 @@ fun BytePacketBuilder.t177(
     } shouldEqualsTo 0x11
 }
 
-fun BytePacketBuilder.t516( // 1302
+internal fun BytePacketBuilder.t516( // 1302
     sourceType: Int = 0 // always 0
 ) {
     writeShort(0x516)
@@ -650,7 +657,7 @@ fun BytePacketBuilder.t516( // 1302
     } shouldEqualsTo 4
 }
 
-fun BytePacketBuilder.t521( // 1313
+internal fun BytePacketBuilder.t521( // 1313
     productType: Int = 0, // coz setProductType is never used
     unknown: Short = 0 // const
 ) {
@@ -661,7 +668,7 @@ fun BytePacketBuilder.t521( // 1313
     } shouldEqualsTo 6
 }
 
-fun BytePacketBuilder.t536( // 1334
+internal fun BytePacketBuilder.t536( // 1334
     loginExtraData: ByteArray
 ) {
     writeShort(0x536)
@@ -670,7 +677,7 @@ fun BytePacketBuilder.t536( // 1334
     }
 }
 
-fun BytePacketBuilder.t525(
+internal fun BytePacketBuilder.t525(
     t536: ByteReadPacket
 ) {
     writeShort(0x525)
@@ -680,7 +687,7 @@ fun BytePacketBuilder.t525(
     }
 }
 
-fun BytePacketBuilder.t318(
+internal fun BytePacketBuilder.t318(
     tgtQR: ByteArray // unknown
 ) {
     writeShort(0x318)
@@ -689,8 +696,10 @@ fun BytePacketBuilder.t318(
     }
 }
 
-private fun Boolean.toByte(): Byte = if (this) 1 else 0
-private fun Boolean.toInt(): Int = if (this) 1 else 0
+private inline fun Boolean.toByte(): Byte = if (this) 1 else 0
+private inline fun Boolean.toInt(): Int = if (this) 1 else 0
+
+// noinline: wrong exception stacktrace reported
 
 private infix fun Int.shouldEqualsTo(int: Int) = check(this == int) { "Required $int, but found $this" }
 private infix fun ByteArray.requireSize(exactSize: Int) = check(this.size == exactSize) { "Required size $exactSize, but found ${this.size}" }

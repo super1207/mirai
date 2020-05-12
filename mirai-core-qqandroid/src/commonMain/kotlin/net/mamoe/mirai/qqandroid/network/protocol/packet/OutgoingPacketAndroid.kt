@@ -15,10 +15,10 @@ import kotlinx.io.core.ByteReadPacket
 import kotlinx.io.core.buildPacket
 import kotlinx.io.core.writeFully
 import net.mamoe.mirai.qqandroid.network.QQAndroidClient
+import net.mamoe.mirai.qqandroid.utils.io.encryptAndWrite
+import net.mamoe.mirai.qqandroid.utils.io.writeHex
+import net.mamoe.mirai.qqandroid.utils.io.writeIntLVPacket
 import net.mamoe.mirai.utils.MiraiInternalAPI
-import net.mamoe.mirai.utils.io.encryptAndWrite
-import net.mamoe.mirai.utils.io.writeHex
-import net.mamoe.mirai.utils.io.writeIntLVPacket
 
 internal class OutgoingPacket constructor(
     name: String?,
@@ -34,39 +34,7 @@ internal class OutgoingPacket constructor(
 internal val KEY_16_ZEROS = ByteArray(16)
 internal val EMPTY_BYTE_ARRAY = ByteArray(0)
 
-/**
- * com.tencent.qphone.base.util.CodecWarpper#encodeRequest(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, byte[], int, int, java.lang.String, byte, byte, byte, byte[], byte[], boolean)
- */
-@Deprecated("危险", level = DeprecationLevel.ERROR)
-@UseExperimental(MiraiInternalAPI::class)
-internal inline fun OutgoingPacketFactory<*>.buildOutgoingPacket(
-    client: QQAndroidClient,
-    bodyType: Byte = 1, // 1: PB?
-    name: String? = this.commandName,
-    commandName: String = this.commandName,
-    key: ByteArray = client.wLoginSigInfo.d2Key,
-    body: BytePacketBuilder.(sequenceId: Int) -> Unit
-): OutgoingPacket {
-    val sequenceId: Int = client.nextSsoSequenceId()
-
-    return OutgoingPacket(name, commandName, sequenceId, buildPacket {
-        writeIntLVPacket(lengthOffset = { it + 4 }) {
-            writeInt(0x0B)
-            writeByte(bodyType)
-            writeInt(sequenceId)
-            writeByte(0)
-            client.uin.toString().let {
-                writeInt(it.length + 4)
-                writeStringUtf8(it)
-            }
-            encryptAndWrite(key) {
-                body(sequenceId)
-            }
-        }
-    })
-}
-
-@UseExperimental(MiraiInternalAPI::class)
+@Suppress("DuplicatedCode")
 internal inline fun OutgoingPacketFactory<*>.buildOutgoingUniPacket(
     client: QQAndroidClient,
     bodyType: Byte = 1, // 1: PB?
@@ -98,7 +66,6 @@ internal inline fun OutgoingPacketFactory<*>.buildOutgoingUniPacket(
 }
 
 
-@UseExperimental(MiraiInternalAPI::class)
 internal inline fun IncomingPacketFactory<*>.buildResponseUniPacket(
     client: QQAndroidClient,
     bodyType: Byte = 1, // 1: PB?
@@ -109,6 +76,7 @@ internal inline fun IncomingPacketFactory<*>.buildResponseUniPacket(
     sequenceId: Int = client.nextSsoSequenceId(),
     body: BytePacketBuilder.(sequenceId: Int) -> Unit
 ): OutgoingPacket {
+    @Suppress("DuplicatedCode")
     return OutgoingPacket(name, commandName, sequenceId, buildPacket {
         writeIntLVPacket(lengthOffset = { it + 4 }) {
             writeInt(0x0B)
@@ -128,8 +96,8 @@ internal inline fun IncomingPacketFactory<*>.buildResponseUniPacket(
     })
 }
 
-@UseExperimental(MiraiInternalAPI::class)
-internal inline fun BytePacketBuilder.writeUniPacket(
+
+private inline fun BytePacketBuilder.writeUniPacket(
     commandName: String,
     unknownData: ByteArray,
     extraData: ByteReadPacket = BRP_STUB,
@@ -161,7 +129,6 @@ internal val NO_ENCRYPT: ByteArray = ByteArray(0)
 /**
  * com.tencent.qphone.base.util.CodecWarpper#encodeRequest(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, byte[], int, int, java.lang.String, byte, byte, byte, byte[], byte[], boolean)
  */
-@UseExperimental(MiraiInternalAPI::class)
 internal inline fun OutgoingPacketFactory<*>.buildLoginOutgoingPacket(
     client: QQAndroidClient,
     bodyType: Byte,
@@ -199,7 +166,7 @@ internal inline fun OutgoingPacketFactory<*>.buildLoginOutgoingPacket(
 
 private inline val BRP_STUB get() = ByteReadPacket.Empty
 
-@UseExperimental(MiraiInternalAPI::class)
+
 internal inline fun BytePacketBuilder.writeSsoPacket(
     client: QQAndroidClient,
     subAppId: Long,
@@ -265,7 +232,7 @@ internal inline fun BytePacketBuilder.writeSsoPacket(
     writeIntLVPacket(lengthOffset = { it + 4 }, builder = body)
 }
 
-@UseExperimental(ExperimentalUnsignedTypes::class, MiraiInternalAPI::class)
+@OptIn(ExperimentalUnsignedTypes::class, MiraiInternalAPI::class)
 internal fun BytePacketBuilder.writeOicqRequestPacket(
     client: QQAndroidClient,
     encryptMethod: EncryptMethod,

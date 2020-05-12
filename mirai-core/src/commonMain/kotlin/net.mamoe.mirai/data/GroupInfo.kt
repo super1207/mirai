@@ -1,12 +1,14 @@
 package net.mamoe.mirai.data
 
 import net.mamoe.mirai.Bot
+import net.mamoe.mirai.LowLevelAPI
 
 /**
  * 群资料.
  *
- * 通过 [Bot.queryGroupInfo] 得到
+ * 通过 [Bot._lowLevelQueryGroupInfo] 得到
  */
+@LowLevelAPI
 interface GroupInfo {
     /**
      * Uin
@@ -61,7 +63,7 @@ interface GroupInfo {
     /**
      * 机器人被禁言还剩时间, 秒.
      */
-    val botMuteRemaining: Int
+    val botMuteTimestamp: Int
 
     /*
     /**

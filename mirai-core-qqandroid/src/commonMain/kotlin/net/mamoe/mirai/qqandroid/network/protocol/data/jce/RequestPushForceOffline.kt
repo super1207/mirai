@@ -9,14 +9,15 @@
 
 package net.mamoe.mirai.qqandroid.network.protocol.data.jce
 
-import kotlinx.serialization.SerialId
 import kotlinx.serialization.Serializable
-import net.mamoe.mirai.qqandroid.io.JceStruct
+import moe.him188.jcekt.JceId
+import net.mamoe.mirai.qqandroid.utils.io.JceStruct
+import kotlin.jvm.JvmField
 
 @Serializable
 internal class RequestPushForceOffline(
-    @SerialId(0) val uin: Long,
-    @SerialId(1) val title: String? = "",
-    @SerialId(2) val tips: String? = "",
-    @SerialId(3) val sameDevice: Byte? = null
+    @JceId(0) @JvmField val uin: Long,
+    @JceId(1) @JvmField val title: String? = "",
+    @JceId(2) @JvmField val tips: String? = "",
+    @JceId(3) @JvmField val sameDevice: Byte? = null
 ) : JceStruct

@@ -7,13 +7,13 @@
  * https://github.com/mamoe/mirai/blob/master/LICENSE
  */
 
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "OverridingDeprecatedMember")
 
 package net.mamoe.mirai.qqandroid
 
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.BotAccount
 import net.mamoe.mirai.BotFactory
+import net.mamoe.mirai.qqandroid.QQAndroid.Bot
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.Context
 import net.mamoe.mirai.utils.MiraiInternalAPI
@@ -21,15 +21,44 @@ import net.mamoe.mirai.utils.MiraiInternalAPI
 /**
  * QQ for Android
  */
-@UseExperimental(MiraiInternalAPI::class)
+@Suppress("INAPPLICABLE_JVM_NAME")
 actual object QQAndroid : BotFactory {
 
+    /**
+     * 使用指定的 [配置][configuration] 构造 [Bot] 实例
+     */
+    @JvmName("newBot")
     actual override fun Bot(context: Context, qq: Long, password: String, configuration: BotConfiguration): Bot {
         return QQAndroidBot(context, BotAccount(qq, password), configuration)
     }
 
+    /**
+     * 使用指定的 [配置][configuration] 构造 [Bot] 实例
+     */
+    @JvmName("newBot")
     fun Bot(qq: Long, password: String, configuration: BotConfiguration = BotConfiguration.Default): Bot =
         QQAndroidBot(BotAccount(qq, password), configuration)
+
+    /**
+     * 使用指定的 [配置][configuration] 构造 [Bot] 实例
+     */
+    @JvmName("newBot")
+    actual override fun Bot(
+        context: Context,
+        qq: Long,
+        passwordMd5: ByteArray,
+        configuration: BotConfiguration
+    ): Bot = QQAndroidBot(context, BotAccount(qq, passwordMd5), configuration)
+
+    /**
+     * 使用指定的 [配置][configuration] 构造 [Bot] 实例
+     */
+    @JvmName("newBot")
+    fun Bot(
+        qq: Long,
+        passwordMd5: ByteArray,
+        configuration: BotConfiguration
+    ): Bot = QQAndroidBot(BotAccount(qq, passwordMd5), configuration)
 }
 
 /**

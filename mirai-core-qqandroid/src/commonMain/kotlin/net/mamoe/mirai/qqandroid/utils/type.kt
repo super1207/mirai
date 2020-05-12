@@ -12,6 +12,8 @@
 
 package net.mamoe.mirai.qqandroid.utils
 
+import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.message.data.AtAll.display
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 
@@ -28,4 +30,53 @@ internal fun Int.toIpV4AddressString(): String {
             }
         }
     }
+}
+
+internal fun String.chineseLength(upTo: Int): Int {
+    return this.sumUpTo(upTo) {
+        when (it) {
+            in '\u0000'..'\u007F' -> 1
+            in '\u0080'..'\u07FF' -> 2
+            in '\u0800'..'\uFFFF' -> 3
+            else -> 4
+        }
+    }
+}
+
+internal fun MessageChain.estimateLength(upTo: Int): Int =
+    sumUpTo(upTo) { it, up ->
+        it.estimateLength(up)
+    }
+
+internal fun SingleMessage.estimateLength(upTo: Int): Int {
+    return when (this) {
+        is QuoteReply -> 444 + this.source.originalMessage.estimateLength(upTo) // Magic number
+        is Image -> 260 // Magic number
+        is PlainText -> content.chineseLength(upTo)
+        is At -> display.chineseLength(upTo)
+        is AtAll -> display.chineseLength(upTo)
+        else -> this.toString().chineseLength(upTo)
+    }
+}
+
+internal inline fun <T> Iterable<T>.sumUpTo(upTo: Int, selector: (T, remaining: Int) -> Int): Int {
+    var sum = 0
+    for (element in this) {
+        if (sum >= upTo) {
+            return sum
+        }
+        sum += selector(element, (upTo - sum).coerceAtLeast(0))
+    }
+    return sum
+}
+
+internal inline fun CharSequence.sumUpTo(upTo: Int, selector: (Char) -> Int): Int {
+    var sum = 0
+    for (element in this) {
+        sum += selector(element)
+        if (sum >= upTo) {
+            return sum
+        }
+    }
+    return sum
 }

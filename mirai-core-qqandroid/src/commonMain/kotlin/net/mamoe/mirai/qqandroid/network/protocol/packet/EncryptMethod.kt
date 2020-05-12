@@ -14,12 +14,11 @@ import kotlinx.io.core.ByteReadPacket
 import kotlinx.io.core.buildPacket
 import kotlinx.io.core.writeFully
 import net.mamoe.mirai.qqandroid.network.QQAndroidClient
-import net.mamoe.mirai.utils.cryptor.ECDH
-import net.mamoe.mirai.utils.cryptor.ECDHKeyPair
-import net.mamoe.mirai.utils.io.encryptAndWrite
-import net.mamoe.mirai.utils.io.writeShortLVByteArray
+import net.mamoe.mirai.qqandroid.utils.cryptor.ECDH
+import net.mamoe.mirai.qqandroid.utils.cryptor.ECDHKeyPair
+import net.mamoe.mirai.qqandroid.utils.io.encryptAndWrite
+import net.mamoe.mirai.qqandroid.utils.io.writeShortLVByteArray
 
-@UseExperimental(ExperimentalUnsignedTypes::class)
 internal interface EncryptMethod {
     val id: Int
 
@@ -43,22 +42,22 @@ internal interface EncryptMethodSessionKey : EncryptMethod {
         }
 }
 
-inline class EncryptMethodSessionKeyLoginState2(override val sessionKey: ByteArray) :
+internal class EncryptMethodSessionKeyLoginState2(override val sessionKey: ByteArray) :
     EncryptMethodSessionKey {
     override val currentLoginState: Int get() = 2
 }
 
-inline class EncryptMethodSessionKeyLoginState3(override val sessionKey: ByteArray) :
+internal class EncryptMethodSessionKeyLoginState3(override val sessionKey: ByteArray) :
     EncryptMethodSessionKey {
     override val currentLoginState: Int get() = 3
 }
 
-internal inline class EncryptMethodECDH135(override val ecdh: ECDH) :
+internal class EncryptMethodECDH135(override val ecdh: ECDH) :
     EncryptMethodECDH {
     override val id: Int get() = 135
 }
 
-internal inline class EncryptMethodECDH7(override val ecdh: ECDH) :
+internal class EncryptMethodECDH7(override val ecdh: ECDH) :
     EncryptMethodECDH {
     override val id: Int get() = 7
 }

@@ -15,6 +15,8 @@ package net.mamoe.mirai.message.data
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
 
+private const val displayA = "@全体成员"
+
 /**
  * "@全体成员".
  *
@@ -22,15 +24,29 @@ import kotlin.jvm.JvmName
  *
  * @see At at 单个群成员
  */
-object AtAll : Message, Message.Key<AtAll>, MessageContent {
-    override fun toString(): String = "@全体成员"
+object AtAll :
+    Message.Key<AtAll>,
+    MessageContent {
+    const val display = displayA
+    override val typeName: String
+        get() = "AtAll"
+
+    @Suppress("SpellCheckingInspection")
+    override fun toString(): String = "[mirai:atall]"
+    override fun contentToString(): String = display
+    override fun equals(other: Any?): Boolean {
+        return other === this
+    }
+
+    override fun hashCode(): Int {
+        return display.hashCode()
+    }
 
     // 自动为消息补充 " "
-
-    override fun followedBy(tail: Message): CombinedMessage {
-        if (tail is PlainText && tail.stringValue.startsWith(' ')) {
-            return super<MessageContent>.followedBy(tail)
+    override fun followedBy(tail: Message): MessageChain {
+        if (tail is PlainText && tail.content.startsWith(' ')) {
+            return super.followedBy(tail)
         }
-        return super<MessageContent>.followedBy(PlainText(" ")) + tail
+        return super.followedBy(PlainText(" ")) + tail
     }
 }

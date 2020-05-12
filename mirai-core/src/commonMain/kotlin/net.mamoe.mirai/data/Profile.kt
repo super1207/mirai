@@ -11,11 +11,11 @@
 
 package net.mamoe.mirai.data
 
-import io.ktor.util.date.GMTDate
-
+/*
 /**
  * 个人资料
  */
+@MiraiExperimentalAPI
 @Suppress("PropertyName")
 data class Profile(
     val qq: Long,
@@ -54,8 +54,9 @@ data class Profile(
 /**
  * 性别
  */
+@MiraiExperimentalAPI
 enum class Gender(val value: Byte) {
     SECRET(0),
     MALE(1),
     FEMALE(2)
-}
+}*/

@@ -9,34 +9,49 @@
 
 @file:JvmMultifileClass
 @file:JvmName("MessageUtils")
+@file:Suppress("NOTHING_TO_INLINE")
 
 package net.mamoe.mirai.message.data
 
+import net.mamoe.mirai.utils.PlannedRemoval
+import net.mamoe.mirai.utils.SinceMirai
 import kotlin.jvm.JvmMultifileClass
 import kotlin.jvm.JvmName
-import kotlin.jvm.JvmStatic
+import kotlin.jvm.JvmSynthetic
 
 /**
- * 纯文本. 可含 emoji 表情.
+ * 纯文本. 可含 emoji 表情如 😊.
  *
- * 一般不需要主动构造 [PlainText], [Message] 可直接与 [String] 相加. Java 用户请使用 [MessageChain.plus]
+ * 一般不需要主动构造 [PlainText], [Message] 可直接与 [String] 相加. Java 用户请使用 [Message.plus]
  */
-inline class PlainText(val stringValue: String) : Message, MessageContent {
+data class PlainText(
+    @SinceMirai("1.0.0")
+    val content: String
+) : MessageContent {
+
+    @PlannedRemoval("1.2.0")
+    @Deprecated(
+        "use content instead for clearer semantics",
+        level = DeprecationLevel.WARNING,
+        replaceWith = ReplaceWith("content")
+    )
+    val stringValue: String
+        get() = content
+
+    @Suppress("unused")
     constructor(charSequence: CharSequence) : this(charSequence.toString())
 
-    override operator fun contains(sub: String): Boolean = sub in stringValue
-    override fun toString(): String = stringValue
+    override fun toString(): String = content
+    override fun contentToString(): String = content
 
     companion object Key : Message.Key<PlainText> {
-        @JvmStatic
-        val Empty = PlainText("")
-        @JvmStatic
-        val Null = PlainText("null")
+        override val typeName: String get() = "PlainText"
     }
 }
 
 /**
  * 构造 [PlainText]
  */
+@JvmSynthetic
 @Suppress("NOTHING_TO_INLINE")
 inline fun String.toMessage(): PlainText = PlainText(this)

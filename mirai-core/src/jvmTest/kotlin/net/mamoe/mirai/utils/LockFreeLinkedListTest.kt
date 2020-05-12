@@ -14,21 +14,14 @@ package net.mamoe.mirai.utils
 import kotlinx.coroutines.*
 import net.mamoe.mirai.test.shouldBeEqualTo
 import net.mamoe.mirai.test.shouldBeTrue
-import org.junit.Test
-import kotlin.system.exitProcess
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@Suppress("UnusedEquals")
 @MiraiExperimentalAPI
 internal class LockFreeLinkedListTest {
-    init {
-        GlobalScope.launch {
-            delay(30 * 1000)
-            exitProcess(-100)
-        }
-    }
-
     @Test
     fun addAndGetSingleThreaded() {
         val list = LockFreeLinkedList<Int>()
@@ -142,7 +135,6 @@ internal class LockFreeLinkedListTest {
         list.size shouldBeEqualTo 0
     }
 
-    @UseExperimental(ExperimentalUnsignedTypes::class)
     @Test
     fun withInlineClassElements() {
         val list = LockFreeLinkedList<UInt>()
@@ -270,9 +262,13 @@ internal class LockFreeLinkedListTest {
      */
 }
 
-@UseExperimental(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 @MiraiExperimentalAPI
-internal suspend inline fun <E : LockFreeLinkedList<*>> E.concurrentDo(numberOfCoroutines: Int, times: Int, crossinline todo: E.() -> Unit) =
+internal suspend inline fun <E : LockFreeLinkedList<*>> E.concurrentDo(
+    numberOfCoroutines: Int,
+    times: Int,
+    crossinline todo: E.() -> Unit
+) =
     coroutineScope {
         repeat(numberOfCoroutines) {
             launch(start = CoroutineStart.UNDISPATCHED) {

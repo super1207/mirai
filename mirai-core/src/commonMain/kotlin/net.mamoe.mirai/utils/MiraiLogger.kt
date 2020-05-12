@@ -8,10 +8,14 @@
  */
 
 @file:Suppress("unused")
+@file:JvmMultifileClass
+@file:JvmName("Utils")
 
 package net.mamoe.mirai.utils
 
 import net.mamoe.mirai.Bot
+import kotlin.jvm.JvmMultifileClass
+import kotlin.jvm.JvmName
 import kotlin.jvm.JvmOverloads
 
 
@@ -24,6 +28,8 @@ import kotlin.jvm.JvmOverloads
  * **注意:** 请为日志做好分类, 即不同的模块使用不同的 [MiraiLogger].
  * 如, [Bot] 中使用 identity 为 "Bot(qqId)" 的 [MiraiLogger]
  * 而 [Bot] 的网络处理中使用 identity 为 "BotNetworkHandler" 的.
+ *
+ * Java 调用: `Utils.getDefaultLogger().invoke(identity)`
  */
 var DefaultLogger: (identity: String?) -> MiraiLogger = { PlatformLogger(it) }
 
@@ -204,7 +210,8 @@ inline fun MiraiLogger.error(lazyMessage: () -> String?, e: Throwable?) {
  *
  * 不应该直接构造这个类的实例. 请使用 [DefaultLogger], 或使用默认的顶层日志记录 [MiraiLogger.Companion]
  */
-expect open class PlatformLogger @JvmOverloads internal constructor(identity: String? = "Mirai") : MiraiLoggerPlatformBase
+expect open class PlatformLogger @JvmOverloads constructor(identity: String? = "Mirai") : MiraiLoggerPlatformBase
+
 
 /**
  * 不做任何事情的 logger, keep silent.
@@ -237,14 +244,19 @@ class SimpleLogger(
     }
 
     companion object {
-        inline operator fun invoke(crossinline logger: (message: String?, e: Throwable?) -> Unit): SimpleLogger = SimpleLogger(null, logger)
+        inline operator fun invoke(crossinline logger: (message: String?, e: Throwable?) -> Unit): SimpleLogger =
+            SimpleLogger(null, logger)
 
-        inline operator fun invoke(identity: String?, crossinline logger: (message: String?, e: Throwable?) -> Unit): SimpleLogger =
+        inline operator fun invoke(
+            identity: String?,
+            crossinline logger: (message: String?, e: Throwable?) -> Unit
+        ): SimpleLogger =
             SimpleLogger(identity) { _, message, e ->
                 logger(message, e)
             }
 
-        operator fun invoke(logger: (priority: LogPriority, message: String?, e: Throwable?) -> Unit): SimpleLogger = SimpleLogger(null, logger)
+        operator fun invoke(logger: (priority: LogPriority, message: String?, e: Throwable?) -> Unit): SimpleLogger =
+            SimpleLogger(null, logger)
     }
 
     override fun verbose0(message: String?) = logger(LogPriority.VERBOSE, message, null)
@@ -266,7 +278,8 @@ class SimpleLogger(
  * @see disable 关闭
  */
 @Suppress("MemberVisibilityCanBePrivate")
-class MiraiLoggerWithSwitch internal constructor(private val delegate: MiraiLogger, default: Boolean) : MiraiLoggerPlatformBase() {
+class MiraiLoggerWithSwitch internal constructor(private val delegate: MiraiLogger, default: Boolean) :
+    MiraiLoggerPlatformBase() {
     override val identity: String? get() = delegate.identity
 
     /**

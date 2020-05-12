@@ -11,13 +11,22 @@
 
 package net.mamoe.mirai.event
 
+import kotlinx.coroutines.CoroutineScope
+import net.mamoe.mirai.JavaFriendlyAPI
 import net.mamoe.mirai.event.internal.broadcastInternal
-import net.mamoe.mirai.utils.MiraiInternalAPI
+import net.mamoe.mirai.utils.MiraiExperimentalAPI
+import net.mamoe.mirai.utils.SinceMirai
+import net.mamoe.mirai.utils.internal.runBlocking
+import kotlin.jvm.JvmName
+import kotlin.jvm.JvmSynthetic
+import kotlin.jvm.Volatile
 
 /**
  * 可被监听的类, 可以是任何 class 或 object.
  *
  * 若监听这个类, 监听器将会接收所有事件的广播.
+ *
+ * 所有 [Event] 都应继承 [AbstractEvent] 而不要直接实现 [Event]. 否则将无法广播也无法监听.
  *
  * @see subscribeAlways
  * @see subscribeOnce
@@ -25,48 +34,120 @@ import net.mamoe.mirai.utils.MiraiInternalAPI
  * @see subscribeMessages
  *
  * @see [broadcast] 广播事件
- * @see [subscribe] 监听事件
+ * @see [CoroutineScope.subscribe] 监听事件
+ *
+ * @see CancellableEvent 可被取消的事件
  */
-interface Event
-
-/**
- * 可被取消的事件
- */
-interface CancellableEvent {
+interface Event {
     /**
-     * 事件是否已取消.
+     * 事件是否已被拦截.
+     *
+     * 所有事件都可以被拦截, 拦截后低优先级的监听器将不会处理到这个事件.
+     *
+     * @see intercept 拦截事件
      */
-    val isCancelled: Boolean
+    @SinceMirai("1.0.0")
+    val isIntercepted: Boolean
 
     /**
-     * 取消这个事件.
+     * 拦截这个事件
+     *
+     * 当事件被 [拦截][Event.intercept] 后, 优先级较低 (靠右) 的监听器将不会被调用.
+     *
+     * @see [Listener.EventPriority] 查看优先级相关信息
      */
-    fun cancel()
+    @SinceMirai("1.0.0")
+    fun intercept()
+
+
+    @Deprecated(
+        """
+        Don't implement Event but extend AbstractEvent instead.
+    """, level = DeprecationLevel.HIDDEN
+    ) // so Kotlin class won't be compiled.
+    @Suppress("WRONG_MODIFIER_CONTAINING_DECLARATION", "PropertyName")
+    @get:JvmSynthetic // so Java user won't see it
+    internal val DoNotImplementThisClassButExtendAbstractEvent: Nothing
 }
 
 /**
- * 可被取消的事件的实现
+ * 所有实现了 [Event] 接口的类都应该继承的父类.
+ *
+ * 在使用事件时应使用类型 [Event]. 在实现自定义事件时应继承 [AbstractEvent].
  */
-abstract class AbstractCancellableEvent : Event, CancellableEvent {
-    /**
-     * 事件是否已取消.
-     */
-    override val isCancelled: Boolean get() = _cancelled
+@SinceMirai("1.0.0")
+abstract class AbstractEvent : Event {
+    @Suppress("WRONG_MODIFIER_CONTAINING_DECLARATION", "PropertyName")
+    @get:JvmSynthetic // so Java user won't see it
+    @Deprecated("prohibit illegal overrides", level = DeprecationLevel.HIDDEN)
+    final override val DoNotImplementThisClassButExtendAbstractEvent: Nothing
+        get() = throw Error("Shouldn't be reached")
 
-    private var _cancelled: Boolean = false
+    @Volatile
+    private var _intercepted = false
+
+    @Volatile
+    private var _cancelled = false
+
+    // 实现 Event
+    /**
+     * @see Event.isIntercepted
+     */
+    @SinceMirai("1.0.0")
+    override val isIntercepted: Boolean
+        get() = _intercepted
 
     /**
-     * 取消事件.
+     * @see Event.intercept
      */
-    override fun cancel() {
+    @SinceMirai("1.0.0")
+    override fun intercept() {
+        _intercepted = true
+    }
+
+    // 实现 CancellableEvent
+    /**
+     * @see CancellableEvent.isCancelled
+     */
+    val isCancelled: Boolean get() = _cancelled
+
+    /**
+     * @see CancellableEvent.cancel
+     */
+    fun cancel() {
+        check(this is CancellableEvent) {
+            "Event $this is not cancellable"
+        }
         _cancelled = true
     }
 }
 
 /**
- * 广播一个事件的唯一途径.
+ * 可被取消的事件
  */
-@UseExperimental(MiraiInternalAPI::class)
+interface CancellableEvent : Event {
+    /**
+     * 事件是否已被取消.
+     *
+     * 事件需实现 [CancellableEvent] 接口才可以被取消,
+     * 否则此属性固定返回 false.
+     */
+    val isCancelled: Boolean
+
+    /**
+     * 取消这个事件.
+     * 事件需实现 [CancellableEvent] 接口才可以被取消
+     *
+     * @throws IllegalStateException 当事件未实现接口 [CancellableEvent] 时抛出
+     */
+    fun cancel()
+}
+
+/**
+ * 广播一个事件的唯一途径.
+ * @see __broadcastJava
+ */
+@JvmSynthetic
 suspend fun <E : Event> E.broadcast(): E = apply {
     if (this is BroadcastControllable && !this.shouldBroadcast) {
         return@apply
@@ -75,15 +156,35 @@ suspend fun <E : Event> E.broadcast(): E = apply {
 }
 
 /**
+ * 在 Java 广播一个事件的唯一途径.
+ *
+ * 调用方法: `EventKt.broadcast(event)`
+ */
+@Suppress("FunctionName")
+@JvmName("broadcast")
+@JavaFriendlyAPI
+fun <E : Event> E.__broadcastJava(): E = apply {
+    if (this is BroadcastControllable && !this.shouldBroadcast) {
+        return@apply
+    }
+    runBlocking { this@__broadcastJava.broadcastInternal() }
+}
+
+/**
  * 设置为 `true` 以关闭事件.
  * 所有的 `subscribe` 都能正常添加到监听器列表, 但所有的广播都会直接返回.
  */
+@MiraiExperimentalAPI
 var EventDisabled = false
 
 /**
- * 可控制是否需要广播这个事件包
+ * 可控制是否需要广播这个事件
  */
 interface BroadcastControllable : Event {
+    /**
+     * 返回 `false` 时将不会广播这个事件.
+     */
     val shouldBroadcast: Boolean
         get() = true
 }
+

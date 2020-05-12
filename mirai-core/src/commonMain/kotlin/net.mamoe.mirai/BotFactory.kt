@@ -7,31 +7,64 @@
  * https://github.com/mamoe/mirai/blob/master/LICENSE
  */
 
-@file:Suppress("FunctionName")
+@file:Suppress("FunctionName", "INAPPLICABLE_JVM_NAME", "DEPRECATION_ERROR", "DeprecatedCallableAddReplaceWith")
 
 package net.mamoe.mirai
 
 import net.mamoe.mirai.utils.BotConfiguration
 import net.mamoe.mirai.utils.Context
 import kotlin.jvm.JvmName
-import kotlin.jvm.JvmOverloads
+import kotlin.jvm.JvmSynthetic
 
 /**
- * 构造 [Bot] 的工厂.
+ * 构造 [Bot] 的工厂. 这是 [Bot] 唯一的构造方式.
  *
- * 在协议模块中有各自的实现.
- * - `mirai-core-timpc`: `TIMPC`
- * - `mirai-core-qqandroid`: `QQAndroid`
+ * `mirai-core-qqandroid`: `QQAndroid`
+ *
+ * 在 JVM, 请查看 `BotFactoryJvm`
  */
-interface BotFactory {
+expect interface BotFactory {
     /**
      * 使用指定的 [配置][configuration] 构造 [Bot] 实例
      */
-    fun Bot(context: Context, qq: Long, password: String, configuration: BotConfiguration = BotConfiguration.Default): Bot
+    @JvmName("newBot")
+    fun Bot(
+        context: Context,
+        qq: Long,
+        password: String,
+        configuration: BotConfiguration = BotConfiguration.Default
+    ): Bot
+
+    /**
+     * 使用指定的 [配置][configuration] 构造 [Bot] 实例
+     */
+    @JvmName("newBot")
+    fun Bot(
+        context: Context,
+        qq: Long,
+        passwordMd5: ByteArray,
+        configuration: BotConfiguration = BotConfiguration.Default
+    ): Bot
 }
 
 /**
  * 使用指定的 [配置][configuration] 构造 [Bot] 实例
  */
-inline fun BotFactory.Bot(context: Context, qq: Long, password: String, configuration: (BotConfiguration.() -> Unit)): Bot =
-    this.Bot(context, qq, password, BotConfiguration().apply(configuration))
+@JvmSynthetic
+inline fun BotFactory.Bot(
+    context: Context,
+    qq: Long,
+    password: String,
+    configuration: (BotConfiguration.() -> Unit)
+): Bot = this.Bot(context, qq, password, BotConfiguration().apply(configuration))
+
+/**
+ * 使用指定的 [配置][configuration] 构造 [Bot] 实例
+ */
+@JvmSynthetic
+inline fun BotFactory.Bot(
+    context: Context,
+    qq: Long,
+    password: ByteArray,
+    configuration: (BotConfiguration.() -> Unit)
+): Bot = this.Bot(context, qq, password, BotConfiguration().apply(configuration))
